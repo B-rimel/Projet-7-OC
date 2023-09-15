@@ -1,16 +1,11 @@
 const express = require("express");
 const app = express();
-
-const userRoutes = require("./routes/User");
-app.use("/api/auth", userRoutes);
-const bookRoutes = require("./routes/Book");
-app.use("/api/books", bookRoutes);
-
 app.use(express.json());
 
+const bcrypt = require("bcrypt");
 const mongoose = require("mongoose");
-const Book = require("./models/Book");
-const User = require("./models/User");
+
+const userRoutes = require("./routes/User");
 
 mongoose
   .connect(
@@ -32,5 +27,7 @@ app.use((req, res, next) => {
   );
   next();
 });
+
+app.use("/api/auth", userRoutes);
 
 module.exports = app;

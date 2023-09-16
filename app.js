@@ -6,6 +6,7 @@ const bcrypt = require("bcrypt");
 const mongoose = require("mongoose");
 
 const userRoutes = require("./routes/User");
+const bookRoutes = require("./routes/Book");
 
 mongoose
   .connect(
@@ -29,4 +30,5 @@ app.use((req, res, next) => {
 });
 
 app.use("/api/auth", userRoutes);
+app.use("/api/books", bookRoutes);
 module.exports = app;

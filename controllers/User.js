@@ -25,7 +25,7 @@ exports.login = (req, res, next) => {
         res.status(401).json({ message: "Identifiants incorrects" });
       } else {
         bcrypt
-          .compate(req.body.password, user.password)
+          .compare(req.body.password, user.password)
           .then((valid) => {
             if (!valid) {
               return res

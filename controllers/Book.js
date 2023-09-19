@@ -34,23 +34,27 @@ exports.getBestBooks = (req, res, next) => {
     .catch((error) => {
       res.status(400).json({ message: "Les livres n'ont pas pu être trouvés" });
     });
+};
 
-  exports.createBook = (req, res, next) => {
-    delete req.body._id;
-    const book = new Book({
-      ...req.body,
-      userId: req.auth.userId,
-      ratings: [],
-      averageRating: 0,
-      imageUrl: `${req.protocol}://${req.get("host")}/images/${
-        req.file.filename
-      }`,
+exports.createBook = (req, res, next) => {
+  const bookObject = JSON.parse(req.body.book);
+  delete bookObject._id;
+  delete bookObject._userId;
+  const book = new Book({
+    ...bookObject,
+    userId: req.auth.userId,
+    ratings: [],
+    averageRating: 0,
+    imageUrl: `${req.protocol}://${req.get("host")}/images/${
+      req.file.filename
+    }`,
+  });
+  book
+    .save()
+    .then(() => {
+      res.status(201).json({ message: "Le livre a été correctement créé !" });
+    })
+    .catch((error) => {
+      res.status(500).json({ error: "Impossible de créer le livre" });
     });
-    book
-      .save()
-      .then(() => {
-        res.status(201).json({ message: "Le livre a été correctement créé !" });
-      })
-      .catch(res.status(500).json({ error: "Impossible de créer le livre" }));
-  };
 };

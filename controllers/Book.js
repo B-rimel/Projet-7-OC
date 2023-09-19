@@ -1,5 +1,6 @@
 const multer = require("multer");
 const Book = require("../models/Book");
+const { request } = require("../app");
 
 exports.getAllBooks = (req, res, next) => {
   Book.find()
@@ -57,4 +58,35 @@ exports.createBook = (req, res, next) => {
     .catch((error) => {
       res.status(500).json({ error: "Impossible de créer le livre" });
     });
+};
+
+exports.updateBook = (req, res, next) => {
+  const requestObject = req.file
+    ? {
+        ...JSON.parse(req.body.thing),
+        imageUrl: `${req.protocol}://${req.get("host")}/images/${
+          req.file.filename
+        }`,
+      }
+    : { ...req.body };
+
+  delete requestObject._userId;
+  Book.findOne({ _id: req.params.id })
+    .then((book) => {
+      if (book.userId != req.auth.userId) {
+        res.status(400).json({ message: "Accès refusé" });
+      } else {
+        Book.updateOne(
+          { _id: req.params.id },
+          { ...requestObject, _id: req.params.id }
+        )
+          .then(() =>
+            res
+              .status(200)
+              .json({ message: "Succès  de la mise à jour du livre" })
+          )
+          .catch((error) => res.status(401).json({ message: "Accès refusé" }));
+      }
+    })
+    .catch((error) => res.status(400).json({ error }));
 };

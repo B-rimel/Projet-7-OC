@@ -23,6 +23,7 @@ exports.getOneBook = (req, res, next) => {
     });
 };
 
+//Ici, on utilise .sort pour trier les notes moyenne par ordre décroissant, puis .limit pour ne montrer que les 3 premiers (https://www.mongodb.com/docs/manual/reference/operator/aggregation/limit/)
 exports.getBestBooks = (req, res, next) => {
   Book.find()
     .sort({ averageRating: -1 })

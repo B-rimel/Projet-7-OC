@@ -63,7 +63,7 @@ exports.createBook = (req, res, next) => {
 exports.updateBook = (req, res, next) => {
   const requestObject = req.file
     ? {
-        ...JSON.parse(req.body.thing),
+        ...JSON.parse(req.body.book),
         imageUrl: `${req.protocol}://${req.get("host")}/images/${
           req.file.filename
         }`,

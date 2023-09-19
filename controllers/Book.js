@@ -48,7 +48,9 @@ exports.getBestBooks = (req, res, next) => {
     });
     book
       .save()
-      .then()
+      .then(() => {
+        res.status(201).json({ message: "Le livre a été correctement créé !" });
+      })
       .catch(res.status(500).json({ error: "Impossible de créer le livre" }));
   };
 };

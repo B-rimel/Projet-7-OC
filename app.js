@@ -1,10 +1,10 @@
 const express = require("express");
+const path = require("path");
 const app = express();
 app.use(express.json());
 
 const bcrypt = require("bcrypt");
 const mongoose = require("mongoose");
-
 const userRoutes = require("./routes/User");
 const bookRoutes = require("./routes/Book");
 
@@ -28,6 +28,8 @@ app.use((req, res, next) => {
   );
   next();
 });
+
+app.use("/images", express.static(path.join(__dirname, "images")));
 
 app.use("/api/auth", userRoutes);
 app.use("/api/books", bookRoutes);

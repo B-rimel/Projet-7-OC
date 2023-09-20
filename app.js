@@ -10,7 +10,7 @@ const bookRoutes = require("./routes/Book");
 
 mongoose
   .connect(
-    "mongodb+srv://lucaafev78:Motdepassetamer!@openclassrooms.n5svtkl.mongodb.net/?retryWrites=true&w=majority",
+    `mongodb+srv://${process.env.DB_LOGIN}:${process.env.DB_PASSWORD}@openclassrooms.n5svtkl.mongodb.net/Mon_Vieux_Grimoire(OC)?retryWrites=true&w=majority`,
     { useNewUrlParser: true, useUnifiedTopology: true }
   )
   .then(() => console.log("Connexion a MongoDB réussie !"))

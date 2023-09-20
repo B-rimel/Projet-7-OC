@@ -1,6 +1,5 @@
 const multer = require("multer");
 const Book = require("../models/Book");
-const { request } = require("../app");
 
 exports.getAllBooks = (req, res, next) => {
   Book.find()

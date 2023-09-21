@@ -71,21 +71,38 @@ exports.updateBook = (req, res, next) => {
     : { ...req.body };
 
   delete requestObject._userId;
+
   Book.findOne({ _id: req.params.id })
     .then((book) => {
       if (book.userId != req.auth.userId) {
         res.status(400).json({ message: "Accès refusé" });
       } else {
         const filename = book.imageUrl.split("images/")[1];
-        fs.unlink(`images/${filename}`, () => {
-          Book.updateOne(
-            { _id: req.params.id },
-            { ...requestObject, _id: req.params.id }
-          );
-        });
+
+        Book.updateOne(
+          { _id: req.params.id },
+          { ...requestObject, _id: req.params.id }
+        )
+          .then(() => {
+            fs.unlink(`images/${filename}`, (error) => {
+              if (error) {
+                res.status(500).json({
+                  message: "Erreur lors de la suppression de l'image",
+                });
+              } else {
+                res
+                  .status(200)
+                  .json({ message: "Succès de la mise à jour du livre" });
+              }
+            });
+          })
+          .catch((error) => {
+            res
+              .status(500)
+              .json({ message: "Erreur lors de la mise à jour du livre" });
+          });
       }
     })
-    .then(() => res.status(200).json({ message: "Livre supprimé avec succès" }))
     .catch((error) => res.status(400).json({ error }));
 };
 

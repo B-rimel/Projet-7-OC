@@ -1,4 +1,5 @@
 const multer = require("multer");
+const fs = require("fs");
 const Book = require("../models/Book");
 
 exports.getAllBooks = (req, res, next) => {
@@ -75,17 +76,36 @@ exports.updateBook = (req, res, next) => {
       if (book.userId != req.auth.userId) {
         res.status(400).json({ message: "Accès refusé" });
       } else {
-        Book.updateOne(
-          { _id: req.params.id },
-          { ...requestObject, _id: req.params.id }
-        )
-          .then(() =>
-            res
-              .status(200)
-              .json({ message: "Succès  de la mise à jour du livre" })
-          )
-          .catch((error) => res.status(401).json({ message: "Accès refusé" }));
+        const filename = book.imageUrl.split("images/")[1];
+        fs.unlink(`images/${filename}`, () => {
+          Book.updateOne(
+            { _id: req.params.id },
+            { ...requestObject, _id: req.params.id }
+          );
+        });
       }
     })
+    .then(() => res.status(200).json({ message: "Livre supprimé avec succès" }))
     .catch((error) => res.status(400).json({ error }));
+};
+
+exports.deleteBook = (req, res, next) => {
+  Book.findOne({ _id: req.params.id })
+    .then((book) => {
+      if (book.userId != req.auth.userId) {
+        res.status(401).json({ message: "Accès non authorisé" });
+      } else {
+        const filename = book.imageUrl.split("/images/")[1];
+        fs.unlink(`images/${filename}`, () => {
+          Book.deleteOne({ _id: req.params.id })
+            .then(() => {
+              res.status(200).json({ message: "Le livre a été supprimé !" });
+            })
+            .catch((error) => res.status(401).json({ error }));
+        });
+      }
+    })
+    .catch((error) => {
+      res.status(500).json({ error });
+    });
 };

@@ -1,4 +1,5 @@
 const multer = require("multer");
+const fs = require("fs");
 const Book = require("../models/Book");
 
 exports.getAllBooks = (req, res, next) => {
@@ -79,11 +80,15 @@ exports.updateBook = (req, res, next) => {
           { _id: req.params.id },
           { ...requestObject, _id: req.params.id }
         )
-          .then(() =>
+          .then(() => {
+            if (req.file) {
+              const filename = book.imageUrl.split("/images/")[1];
+              fs.unlink(`images/${filename}`);
+            }
             res
               .status(200)
-              .json({ message: "Succès  de la mise à jour du livre" })
-          )
+              .json({ message: "Succès  de la mise à jour du livre" });
+          })
           .catch((error) => res.status(401).json({ message: "Accès refusé" }));
       }
     })

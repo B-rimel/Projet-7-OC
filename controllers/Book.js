@@ -26,6 +26,7 @@ exports.getOneBook = (req, res, next) => {
 
 //Ici, on utilise .sort pour trier les notes moyenne par ordre décroissant, puis .limit pour ne montrer que les 3 premiers (https://www.mongodb.com/docs/manual/reference/operator/aggregation/limit/)
 exports.getBestBooks = (req, res, next) => {
+  delete req.body._id;
   Book.find()
     .sort({ averageRating: -1 })
     .limit(3)
@@ -75,7 +76,7 @@ exports.updateBook = (req, res, next) => {
   Book.findOne({ _id: req.params.id })
     .then((book) => {
       if (book.userId != req.auth.userId) {
-        res.status(400).json({ message: "Accès refusé" });
+        res.status(403).json({ message: "Accès refusé" });
       } else {
         const filename = book.imageUrl.split("images/")[1];
 
@@ -110,7 +111,7 @@ exports.deleteBook = (req, res, next) => {
   Book.findOne({ _id: req.params.id })
     .then((book) => {
       if (book.userId != req.auth.userId) {
-        res.status(401).json({ message: "Accès non authorisé" });
+        res.status(403).json({ message: "Accès non authorisé" });
       } else {
         const filename = book.imageUrl.split("/images/")[1];
         fs.unlink(`images/${filename}`, () => {
@@ -125,4 +126,8 @@ exports.deleteBook = (req, res, next) => {
     .catch((error) => {
       res.status(500).json({ error });
     });
+};
+
+exports.bookRating = (req, res, next) => {
+  Book.findOne({ _id: req.params.id });
 };

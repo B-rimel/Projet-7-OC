@@ -22,7 +22,7 @@ exports.login = (req, res, next) => {
   User.findOne({ email: req.body.email })
     .then((user) => {
       if (!user) {
-        res.status(401).json({ message: "Identifiants incorrects" });
+        res.status(403).json({ message: "Identifiants incorrects" });
       } else {
         bcrypt
           .compare(req.body.password, user.password)

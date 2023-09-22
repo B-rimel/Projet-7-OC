@@ -132,11 +132,10 @@ exports.bookRating = (req, res) => {
   Book.findOne({ _id: req.params.id })
     .then((book) => {
       if (!book) {
-        const newRating = newBook({
+        const newRating = new Book({
           userId: req.auth.userId,
           grade: req.body.rating,
         });
-        console.log(newRating);
       } else if (req.body.rating < 1 || req.body.rating > 5) {
         throw new Error("La note n'est pas valide !");
       } else {
@@ -147,14 +146,13 @@ exports.bookRating = (req, res) => {
             grade: req.body.rating,
           };
           ratings.push(newRating);
-          calculateAverageRating(book.ratings);
-          Book.updateOne(
-            { _id: book._id },
-            { averageRating: calculateAverageRating(book.ratings) }
-          )
+          const averageRating = calculateAverageRating(ratings);
+          Book.updateOne({ _id: book._id }, { averageRating: averageRating })
             .save()
-            .then(() => res.status(200).json({ message: "Moyenne postée !" }))
-            .catch((error) => res.status(400).json({ error }));
+            .then(() => res.status(200).json({ book }))
+            .catch((error) =>
+              res.status(400).json({ message: "Erreur de mise à jour" })
+            );
         }
       }
     })
@@ -163,6 +161,5 @@ exports.bookRating = (req, res) => {
 
 function calculateAverageRating(ratings) {
   let totalGrades = ratings.reduce((sum, rating) => sum + rating.grade, 0);
-  totalGrades = totalGrades / ratings.length;
-  console.log(totalGrades);
+  return totalGrades / ratings.length;
 }

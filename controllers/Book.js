@@ -152,6 +152,7 @@ exports.bookRating = (req, res) => {
             { _id: book._id },
             { averageRating: calculateAverageRating(book.ratings) }
           )
+            .save()
             .then(() => res.status(200).json({ message: "Moyenne postée !" }))
             .catch((error) => res.status(400).json({ error }));
         }

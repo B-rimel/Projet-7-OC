@@ -26,11 +26,10 @@ exports.getOneBook = (req, res, next) => {
 
 //Ici, on utilise .sort pour trier les notes moyenne par ordre décroissant, puis .limit pour ne montrer que les 3 premiers (https://www.mongodb.com/docs/manual/reference/operator/aggregation/limit/)
 exports.getBestBooks = (req, res, next) => {
-  delete req.body._id;
   Book.find()
     .sort({ averageRating: -1 })
     .limit(3)
-    .then((book) => {
+    .then((books) => {
       res.status(200).json(books);
     })
     .catch((error) => {
@@ -128,6 +127,40 @@ exports.deleteBook = (req, res, next) => {
     });
 };
 
-exports.bookRating = (req, res, next) => {
-  Book.findOne({ _id: req.params.id });
+exports.bookRating = (req, res) => {
+  delete req.body._id;
+  Book.findOne({ _id: req.params.id })
+    .then((book) => {
+      if (!book) {
+        const newRating = newBook({
+          userId: req.auth.userId,
+          grade: req.body.rating,
+        });
+        console.log(newRating);
+      } else {
+        if (!book.ratings.find((rating) => rating.userId === req.auth.userId)) {
+          const newRating = {
+            userId: req.auth.userId,
+            grade: req.body.rating,
+          };
+          book.ratings.push(newRating);
+          book
+            .save()
+            .then(() =>
+              res
+                .status(200)
+                .json({ message: "La note a bien été enregistrée" })
+            )
+            .catch((error) => res.status(400).json({ error: error }));
+        } else {
+          res.status(400).json({ error: "Ce livre a déjà été noté" });
+        }
+      }
+    })
+    .catch((error) => res.status(400).json({ error: error }));
 };
+
+function bookAverageRating(ratings) {
+  const totalRatings = ratings.reduce((acc, rating) => acc + ratings.grade, 0);
+  const averageRating = totalRatings / ratings.length;
+}

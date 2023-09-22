@@ -137,30 +137,31 @@ exports.bookRating = (req, res) => {
           grade: req.body.rating,
         });
         console.log(newRating);
+      } else if (req.body.rating < 1 || req.body.rating > 5) {
+        throw new Error("La note n'est pas valide !");
       } else {
-        if (!book.ratings.find((rating) => rating.userId === req.auth.userId)) {
+        const ratings = book.ratings;
+        if (!ratings.find((rating) => rating.userId === req.auth.userId)) {
           const newRating = {
             userId: req.auth.userId,
             grade: req.body.rating,
           };
-          book.ratings.push(newRating);
-          book
-            .save()
-            .then(() =>
-              res
-                .status(200)
-                .json({ message: "La note a bien été enregistrée" })
-            )
-            .catch((error) => res.status(400).json({ error: error }));
-        } else {
-          res.status(400).json({ error: "Ce livre a déjà été noté" });
+          ratings.push(newRating);
+          calculateAverageRating(book.ratings);
+          Book.updateOne(
+            { _id: book._id },
+            { averageRating: calculateAverageRating(book.ratings) }
+          )
+            .then(() => res.status(200).json({ message: "Moyenne postée !" }))
+            .catch((error) => res.status(400).json({ error }));
         }
       }
     })
     .catch((error) => res.status(400).json({ error: error }));
 };
 
-function bookAverageRating(ratings) {
-  const totalRatings = ratings.reduce((acc, rating) => acc + ratings.grade, 0);
-  const averageRating = totalRatings / ratings.length;
+function calculateAverageRating(ratings) {
+  let totalGrades = ratings.reduce((sum, rating) => sum + rating.grade, 0);
+  totalGrades = totalGrades / ratings.length;
+  console.log(totalGrades);
 }

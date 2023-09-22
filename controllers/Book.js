@@ -130,52 +130,43 @@ exports.deleteBook = (req, res, next) => {
 exports.bookRating = (req, res) => {
   Book.findOne({ _id: req.params.id })
     .then((book) => {
-      if (!book) {
-        const newRating = new Book({
-          userId: req.auth.userId,
-          grade: req.body.rating,
-        });
+      if (book) {
+        res.status(400).json({ error: "Cet utilisateur a déjà noté ce livre" });
       } else if (req.body.rating < 1 || req.body.rating > 5) {
-        throw new Error("La note n'est pas valide !");
+        res.status(400).json({ error: "Cette note n'est pas valide" });
       } else {
-        const ratings = book.ratings;
-        if (!ratings.find((rating) => rating.userId === req.auth.userId)) {
-          const newRating = {
-            id: req.params.id,
-            userId: req.auth.userId,
+        //Ajout de la note à l'array rating
+        book.rating
+          .push({
             grade: req.body.rating,
-          };
-          ratings.push(newRating);
-          book.save();
-          const calculatedAverage = calculateAverageRating(ratings);
-          Book.updateOne(
-            { _id: req.params.id },
-            { averageRating: calculateAverageRating(ratings) }
+            userId: req.auth.userId,
+          })
+          .save()
+          .then(() =>
+            res
+              .status(200)
+              .json({ message: "La note du livre a été sauvegardée" })
           )
-            .save()
-            .then(() => res.status(200).json({ book }))
-            .catch((error) =>
-              res.status(400).json({ error: "Echec de la moyenne" })
-            );
-        }
+          .catch((error) =>
+            res.status(400).json({ error: "Echec de l'upload de la note" })
+          );
+
+        //Calcul de la moyenne
+        const ratingSum = book.ratings.reduce(
+          (acc, rating) => acc + rating.grade,
+          0
+        );
+        const ratingAverage = ratingSum / book.ratings.length;
+
+        //Update de la note
+        Book.updateOne({ _id: req.params.id }, { averageRating: ratingAverage })
+          .then(() =>
+            res.status(200).json({ message: "La note moyenne a été ajoutée" })
+          )
+          .catch((error) =>
+            res.status(400).json({ error: "Echec de la note moyenne" })
+          );
       }
     })
-    .catch((error) => res.status(400).json({ error: "une autre erreur" }));
+    .catch(res.status(500).json({ error: "Erreur de la note" }));
 };
-
-function calculateAverageRating(ratings) {
-  let totalGrades = ratings.reduce((sum, rating) => sum + rating.grade, 0);
-  return totalGrades / ratings.length;
-}
-
-// const averageRating = calculateAverageRating(ratings);
-// console.log(averageRating);
-// Book.updateOne(
-//   { _id: req.params.id },
-//   { averageRating: averageRating }
-// )
-//   .save()
-//   .then(() => res.status(200).json({ book }))
-//   .catch((error) =>
-//     res.status(400).json({ message: "Erreur de mise à jour" })
-//   );

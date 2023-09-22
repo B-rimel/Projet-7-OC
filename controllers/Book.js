@@ -128,7 +128,6 @@ exports.deleteBook = (req, res, next) => {
 };
 
 exports.bookRating = (req, res) => {
-  delete req.body._id;
   Book.findOne({ _id: req.params.id })
     .then((book) => {
       if (!book) {
@@ -142,24 +141,41 @@ exports.bookRating = (req, res) => {
         const ratings = book.ratings;
         if (!ratings.find((rating) => rating.userId === req.auth.userId)) {
           const newRating = {
+            id: req.params.id,
             userId: req.auth.userId,
             grade: req.body.rating,
           };
           ratings.push(newRating);
-          const averageRating = calculateAverageRating(ratings);
-          Book.updateOne({ _id: book._id }, { averageRating: averageRating })
+          book.save();
+          const calculatedAverage = calculateAverageRating(ratings);
+          Book.updateOne(
+            { _id: req.params.id },
+            { averageRating: calculateAverageRating(ratings) }
+          )
             .save()
             .then(() => res.status(200).json({ book }))
             .catch((error) =>
-              res.status(400).json({ message: "Erreur de mise à jour" })
+              res.status(400).json({ error: "Echec de la moyenne" })
             );
         }
       }
     })
-    .catch((error) => res.status(400).json({ error: error }));
+    .catch((error) => res.status(400).json({ error: "une autre erreur" }));
 };
 
 function calculateAverageRating(ratings) {
   let totalGrades = ratings.reduce((sum, rating) => sum + rating.grade, 0);
   return totalGrades / ratings.length;
 }
+
+// const averageRating = calculateAverageRating(ratings);
+// console.log(averageRating);
+// Book.updateOne(
+//   { _id: req.params.id },
+//   { averageRating: averageRating }
+// )
+//   .save()
+//   .then(() => res.status(200).json({ book }))
+//   .catch((error) =>
+//     res.status(400).json({ message: "Erreur de mise à jour" })
+//   );

@@ -146,6 +146,7 @@ exports.bookRating = (req, res) => {
         grade: rating,
         userId: userId,
       });
+      book.save().then().catch();
     }
 
     // Calcul de la somme des notes puis de la moyenne

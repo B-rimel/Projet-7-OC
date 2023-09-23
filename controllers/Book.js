@@ -135,7 +135,7 @@ exports.bookRating = (req, res) => {
   }
 
   Book.findOne({ _id: req.params.id }).then((book) => {
-    if (book) {
+    if (book.ratings.find((rating) => rating.userId === req.auth.useriD)) {
       return res
         .status(403)
         .json({ error: "L'utilisateur a déjà noté ce livre" });

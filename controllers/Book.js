@@ -128,45 +128,43 @@ exports.deleteBook = (req, res, next) => {
 };
 
 exports.bookRating = (req, res) => {
-  Book.findOne({ _id: req.params.id })
-    .then((book) => {
-      if (book) {
-        res.status(400).json({ error: "Cet utilisateur a déjà noté ce livre" });
-      } else if (req.body.rating < 1 || req.body.rating > 5) {
-        res.status(400).json({ error: "Cette note n'est pas valide" });
-      } else {
-        //Ajout de la note à l'array rating
-        book.rating
-          .push({
-            grade: req.body.rating,
-            userId: req.auth.userId,
-          })
-          .save()
-          .then(() =>
-            res
-              .status(200)
-              .json({ message: "La note du livre a été sauvegardée" })
-          )
-          .catch((error) =>
-            res.status(400).json({ error: "Echec de l'upload de la note" })
-          );
+  const { rating, userId } = req.body;
 
-        //Calcul de la moyenne
-        const ratingSum = book.ratings.reduce(
-          (acc, rating) => acc + rating.grade,
-          0
-        );
-        const ratingAverage = ratingSum / book.ratings.length;
+  if (rating < 1 || rating > 5) {
+    res.status(400).json({ error: "La note n'est pas valide" });
+  }
 
-        //Update de la note
-        Book.updateOne({ _id: req.params.id }, { averageRating: ratingAverage })
-          .then(() =>
-            res.status(200).json({ message: "La note moyenne a été ajoutée" })
-          )
-          .catch((error) =>
-            res.status(400).json({ error: "Echec de la note moyenne" })
-          );
-      }
-    })
-    .catch(res.status(500).json({ error: "Erreur de la note" }));
+  Book.findOne({ _id: req.params.id }).then((book) => {
+    if (book) {
+      return res
+        .status(403)
+        .json({ error: "L'utilisateur a déjà noté ce livre" });
+    }
+    // Ajout de la note à l'array rating
+    else {
+      book.ratings.push({
+        grade: rating,
+        userId: userId,
+      });
+    }
+
+    // Calcul de la somme des notes puis de la moyenne
+    const ratingSum = book.ratings.reduce(
+      (acc, rating) => acc + rating.grade,
+      0
+    );
+    const ratingAverage = ratingSum / book.ratings.length;
+
+    // Mise à jour du livre avec la nouvelle moyenne
+    Book.findOneAndUpdate(
+      { _id: req.params.id },
+      { averageRating: ratingAverage }
+    )
+      .then((book) => {
+        res.status(200).json({ book });
+      })
+      .catch((error) => {
+        res.status(400).json({ error: "Echec de la mise à jour de la note" });
+      });
+  });
 };

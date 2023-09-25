@@ -13,9 +13,8 @@ const upload = multer({ storage });
 (module.exports = upload.single("image")),
   async (req, res) => {
     const { buffer, originalname } = req.file;
-    const name = file.originalname.split(" ").join("_");
-    const extension = MIME_TYPES[file.mimetype];
-    const ref = name + Date.now() + "." + extension;
+    const name = file.originalname.split(".").slice(0, -1).join("");
+    const ref = name + Date.now();
     await sharp(buffer)
       .webp({ quality: 50 })
       .resize({ width: 500, height: 500 })

@@ -10,14 +10,22 @@ const MIME_TYPES = {
 const storage = multer.memoryStorage();
 const upload = multer({ storage });
 
-(module.exports = upload.single("image")),
-  async (req, res) => {
+module.exports = upload.single("image", async (req, res) => {
+  try {
     const { buffer, originalname } = req.file;
-    const name = file.originalname.split(".").slice(0, -1).join("");
+    const name = originalname.split(".").slice(0, -1).join("");
     const ref = name + Date.now();
+    console.log(ref);
+
     await sharp(buffer)
       .webp({ quality: 50 })
       .resize({ width: 500, height: 500 })
-      .toFile("./images/" + ref)
-      .then(console.log(ref));
-  };
+      .toFile("./images/" + ref + ".webp");
+
+    console.log(ref);
+    res.status(200).json({ message: "L'image a bien été traitée" });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Erreur de traitement de l'image" });
+  }
+});

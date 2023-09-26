@@ -10,11 +10,17 @@ const bookRoutes = require("./routes/Book");
 
 mongoose
   .connect(
-    `mongodb+srv://${process.env.DB_LOGIN}:${process.env.DB_PASSWORD}@openclassrooms.n5svtkl.mongodb.net/${process.env.DATABASE_NAME}?retryWrites=true&w=majority`,
+    `mongodb+srv://${process.env.DB_LOGIN}:${process.env.DB_PASSWORD}@${process.env.MONGO_CLUSTER}/${process.env.DATABASE_NAME}?retryWrites=true&w=majority`,
     { useNewUrlParser: true, useUnifiedTopology: true }
   )
   .then(() => console.log("Connexion a MongoDB réussie !"))
   .catch(() => console.log("Echec de connexion a MongoDB !"));
+
+app.use(
+  helmet({
+    crossOriginResourcePolicy: false,
+  })
+);
 
 app.use((req, res, next) => {
   res.setHeader("Access-Control-Allow-Origin", "*");

@@ -1,7 +1,8 @@
 const express = require("express");
 const path = require("path");
 const app = express();
-const expressSanitizer = require('express-sanitizer');
+const mongoSanitize = require('express-mongo-sanitize');
+const helmet = require('helmet');
 
 app.use(express.json());
 
@@ -19,8 +20,8 @@ mongoose
   .then(() => console.log("Connexion a MongoDB réussie !"))
   .catch(() => console.log("Echec de connexion a MongoDB !"));
 
-app.use(expressSanitizer());
-app.use(helmet({crossOriginResourcePolicy: false,})
+  app.use(mongoSanitize());
+  app.use(helmet({crossOriginResourcePolicy: false,})
 );
 
 app.use((req, res, next) => {

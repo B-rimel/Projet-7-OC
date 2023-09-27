@@ -47,9 +47,7 @@ exports.createBook = (req, res, next) => {
     userId: req.auth.userId,
     ratings: [],
     averageRating: 0,
-    imageUrl: `${req.protocol}://${req.get("host")}/images/${
-      req.file.filename
-    }`,
+    imageUrl: `${req.protocol}://${req.get("host")}/images/${req.file.filename}`,
   });
   book
     .save()
@@ -65,9 +63,7 @@ exports.updateBook = (req, res, next) => {
   const requestObject = req.file
     ? {
         ...JSON.parse(req.body.book),
-        imageUrl: `${req.protocol}://${req.get("host")}/images/${
-          req.file.filename
-        }`,
+        imageUrl: `${req.protocol}://${req.get("host")}/images/${req.file.filename}`,
       }
     : { ...req.body };
 
@@ -136,7 +132,7 @@ exports.bookRating = (req, res) => {
   }
 
   Book.findOne({ _id: req.params.id }).then((book) => {
-    if (book.ratings.find((rating) => rating.userId === req.auth.useriD)) {
+    if (book.ratings.find((rating) => rating.userId === req.auth.userId)) {
       return res
         .status(403)
         .json({ error: "L'utilisateur a déjà noté ce livre" });
@@ -147,26 +143,18 @@ exports.bookRating = (req, res) => {
         grade: rating,
         userId: userId,
       });
-      book.save().then().catch();
+      // book.save().then().catch();
     }
+    
+
 
     // Calcul de la somme des notes puis de la moyenne
-    const ratingSum = book.ratings.reduce(
-      (acc, rating) => acc + rating.grade,
-      0
-    );
+    const ratingSum = book.ratings.reduce((acc, rating) => acc + rating.grade, 0);
     const ratingAverage = ratingSum / book.ratings.length;
 
-    // Mise à jour du livre avec la nouvelle moyenne
-    Book.findOneAndUpdate(
-      { _id: req.params.id },
-      { averageRating: ratingAverage }
-    )
-      .then((book) => {
-        res.status(200).json({ book });
-      })
-      .catch((error) => {
-        res.status(400).json({ error: "Echec de la mise à jour de la note" });
-      });
+    book.averageRating = ratingAverage;
+    book.save()
+    .then((book) => res.status(201).json(book))
+    .catch((error) => res.status(400).json({error}));
   });
 };

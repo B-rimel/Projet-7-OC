@@ -60,44 +60,29 @@ exports.createBook = (req, res, next) => {
 };
 
 exports.updateBook = (req, res, next) => {
-  const requestObject = req.file
-    ? {
-        ...JSON.parse(req.body.book),
-        imageUrl: `${req.protocol}://${req.get("host")}/images/${req.file.filename}`,
-      }
-    : { ...req.body };
-
-  delete requestObject._userId;
-
   Book.findOne({ _id: req.params.id })
     .then((book) => {
       if (book.userId != req.auth.userId) {
         res.status(403).json({ message: "Accès refusé" });
       } else {
-        const filename = book.imageUrl.split("images/")[1];
+        let bookObject = {};
+        if(req.file){
+          const filename = book.imageUrl.split("images/")[1];
 
-        Book.updateOne(
-          { _id: req.params.id },
-          { ...requestObject, _id: req.params.id }
-        )
-          .then(() => {
-            fs.unlink(`images/${filename}`, (error) => {
-              if (error) {
-                res.status(500).json({
-                  message: "Erreur lors de la suppression de l'image",
-                });
-              } else {
-                res
-                  .status(200)
-                  .json({ message: "Succès de la mise à jour du livre" });
-              }
-            });
-          })
-          .catch((error) => {
-            res
-              .status(500)
-              .json({ message: "Erreur lors de la mise à jour du livre" });
-          });
+          fs.unlink(`images/${filename}`, (error) => {
+          if (error) {
+            console.log(error);
+        }});
+
+        bookObject = {...JSON.parse(req.body.book), 
+          imageUrl: `${req.protocol}://${req.get("host")}/images/${req.file.filename}`};
+        } else {
+          bookObject = {...req.body}
+        }
+
+        Book.updateOne({ _id: req.params.id },{ ...bookObject, _id: req.params.id })
+          .then(() => {res.status(200).json({bookObject})})
+          .catch((error) => {res.status(500).json({ message: "Erreur lors de la mise à jour du livre" });});
       }
     })
     .catch((error) => res.status(400).json({ error }));
@@ -143,11 +128,7 @@ exports.bookRating = (req, res) => {
         grade: rating,
         userId: userId,
       });
-      // book.save().then().catch();
     }
-    
-
-
     // Calcul de la somme des notes puis de la moyenne
     const ratingSum = book.ratings.reduce((acc, rating) => acc + rating.grade, 0);
     const ratingAverage = ratingSum / book.ratings.length;

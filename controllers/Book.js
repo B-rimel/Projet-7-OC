@@ -117,14 +117,14 @@ exports.bookRating = (req, res) => {
     res.status(400).json({ error: "La note n'est pas valide" });
   }
 
-  Book.findOne({ _id: req.params.id }).then((book) => {
+  Book.findOne({ _id: req.params.id }).then((book, user) => {
     if (book.ratings.find((rating) => rating.userId === req.auth.userId)) {
       return res
         .status(403)
         .json({ error: "L'utilisateur a déjà noté ce livre" });
     }
     // Ajout de la note à l'array rating
-    else if (user.some((user) => user.userId === req.auth.userId)){
+    else if (user.find((user) => user.userId === req.auth.userId)){
       book.ratings.push({
         grade: rating,
         userId: userId,

@@ -2,6 +2,7 @@ const multer = require("multer");
 const sharp = require("sharp");
 const fs = require("fs");
 const Book = require("../models/Book");
+const { error } = require("console");
 
 
 exports.getAllBooks = (req, res, next) => {
@@ -117,14 +118,18 @@ exports.bookRating = (req, res) => {
     res.status(400).json({ error: "La note n'est pas valide" });
   }
 
-  Book.findOne({ _id: req.params.id }).then((book, user) => {
+  Book.findOne({ _id: req.params.id }).then((book) => {
+
+    if (!book) {
+      res.status(404).json({error: "Aucun livre n'a été trouvé"})
+    }
     if (book.ratings.find((rating) => rating.userId === req.auth.userId)) {
       return res
         .status(403)
         .json({ error: "L'utilisateur a déjà noté ce livre" });
     }
     // Ajout de la note à l'array rating
-    else if {
+    else {
       book.ratings.push({
         grade: rating,
         userId: req.auth.userId,

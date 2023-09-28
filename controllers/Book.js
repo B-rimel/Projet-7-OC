@@ -2,7 +2,7 @@ const multer = require("multer");
 const sharp = require("sharp");
 const fs = require("fs");
 const Book = require("../models/Book");
-const User = require("../models/User");
+
 
 exports.getAllBooks = (req, res, next) => {
   Book.find()
@@ -124,10 +124,10 @@ exports.bookRating = (req, res) => {
         .json({ error: "L'utilisateur a déjà noté ce livre" });
     }
     // Ajout de la note à l'array rating
-    else if (user.find((user) => user.userId === req.auth.userId)){
+    else if {
       book.ratings.push({
         grade: rating,
-        userId: userId,
+        userId: req.auth.userId,
       });
     }
     // Calcul de la somme des notes puis de la moyenne
